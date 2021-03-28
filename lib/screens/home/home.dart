@@ -38,26 +38,25 @@ class _HomeState extends State<Home> {
   }
 
   addItem() {
-    listKey.currentState
-        .insertItem(0, duration: const Duration(milliseconds: 300));
-
-    dummyData.insert(0, new Todo("10", "Some Description", false));
+    setState(() {
+      dummyData.insert(0, new Todo("10", "Some Description", false));
+    });
   }
 
   removeItem(indexToRemove) {
-    listKey.currentState.removeItem(indexToRemove,
-        (_, animation) => animatedTodo(context, indexToRemove, animation),
-        duration: const Duration(milliseconds: 300));
-
-    Future.delayed(Duration(milliseconds: 400), () {
+    setState(() {
       dummyData.removeAt(indexToRemove);
+    });
+  }
+
+  handleStateChange(item, newValue, index) {
+    setState(() {
+      dummyData[index].isDone = newValue;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // print("length =>" + dummyData.length.toString());
-
     return Scaffold(
       body: SafeArea(
         child: Container(
@@ -66,15 +65,27 @@ class _HomeState extends State<Home> {
             child: Column(
               children: [
                 Expanded(
-                  child: AnimatedList(
-                    shrinkWrap: true,
-                    key: listKey,
-                    initialItemCount: dummyData.length,
-                    itemBuilder: (context, index, animation) {
-                      return animatedTodo(context, index, animation);
-                    },
-                  ),
-                ),
+                    child: ReorderableListView(
+                  children: [
+                    for (int index = 0; index < dummyData.length; index++)
+                      TodoItem(
+                          key: Key(index.toString()),
+                          item: dummyData[index],
+                          index: index,
+                          onStateChange: handleStateChange,
+                          onItemDelete: removeItem),
+                  ],
+                  onReorder: (int oldIndex, int newIndex) {
+                    if (oldIndex < newIndex) {
+                      newIndex -= 1;
+                    }
+                    final Todo item = dummyData.removeAt(oldIndex);
+
+                    setState(() {
+                      dummyData.insert(newIndex, item);
+                    });
+                  },
+                )),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 5),
                   child: FLRaisedButton(

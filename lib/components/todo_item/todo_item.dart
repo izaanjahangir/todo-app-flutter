@@ -8,12 +8,14 @@ class TodoItem extends StatelessWidget {
   final Function onItemDelete;
   final Todo item;
   final int index;
+  final Key key;
 
   TodoItem(
       {@required this.onStateChange,
       this.item,
       this.index,
-      @required this.onItemDelete});
+      @required this.onItemDelete,
+      this.key});
 
   handleStateChange(newValue) {
     onStateChange(item, newValue, index);
