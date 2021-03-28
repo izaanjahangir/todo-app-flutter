@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:todo_app/components/todo_item/todo_item.dart';
 import 'package:todo_app/models/todo.dart';
+import 'package:todo_app/components/todo_item/todo_item.dart';
 import 'package:todo_app/config/theme_colors.dart';
+import 'package:flui/flui.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -15,18 +16,48 @@ class _HomeState extends State<Home> {
     new Todo("3", "Some description", false)
   ];
 
-  handleTodoStateChange(item, newValue, index) {
-    List<Todo> localList = dummyData;
+  final GlobalKey<AnimatedListState> listKey = GlobalKey<AnimatedListState>();
 
-    localList[index].isDone = newValue;
+  Widget animatedTodo(BuildContext context, int index, animation) {
+    Todo item = dummyData[index];
 
-    setState(() {
-      dummyData = localList;
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(-1, 0),
+        end: Offset(0, 0),
+      ).animate(animation),
+      child: TodoItem(
+        onStateChange: () {},
+        onItemDelete: (newIndex) {
+          removeItem(newIndex);
+        },
+        item: item,
+        index: index,
+      ),
+    );
+  }
+
+  addItem() {
+    listKey.currentState
+        .insertItem(0, duration: const Duration(milliseconds: 300));
+
+    dummyData.insert(0, new Todo("10", "Some Description", false));
+  }
+
+  removeItem(indexToRemove) {
+    listKey.currentState.removeItem(indexToRemove,
+        (_, animation) => animatedTodo(context, indexToRemove, animation),
+        duration: const Duration(milliseconds: 300));
+
+    Future.delayed(Duration(milliseconds: 400), () {
+      dummyData.removeAt(indexToRemove);
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    // print("length =>" + dummyData.length.toString());
+
     return Scaffold(
       body: SafeArea(
         child: Container(
@@ -34,15 +65,34 @@ class _HomeState extends State<Home> {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             child: Column(
               children: [
-                ...dummyData
-                    .asMap()
-                    .entries
-                    .map((entry) => TodoItem(
-                          item: entry.value,
-                          index: entry.key,
-                          onStateChange: handleTodoStateChange,
-                        ))
-                    .toList(),
+                Expanded(
+                  child: AnimatedList(
+                    shrinkWrap: true,
+                    key: listKey,
+                    initialItemCount: dummyData.length,
+                    itemBuilder: (context, index, animation) {
+                      return animatedTodo(context, index, animation);
+                    },
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  child: FLRaisedButton(
+                    expanded: true,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    color: ThemeColors.darkBlue,
+                    textColor: Colors.white,
+                    child: Text(
+                      'Add Item',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    onPressed: addItem,
+                  ),
+                ),
               ],
             )),
       ),

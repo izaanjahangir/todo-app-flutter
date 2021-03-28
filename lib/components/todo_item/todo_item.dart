@@ -5,10 +5,15 @@ import 'package:todo_app/config/theme_colors.dart';
 
 class TodoItem extends StatelessWidget {
   final Function onStateChange;
+  final Function onItemDelete;
   final Todo item;
   final int index;
 
-  TodoItem({@required this.onStateChange, this.item, this.index});
+  TodoItem(
+      {@required this.onStateChange,
+      this.item,
+      this.index,
+      @required this.onItemDelete});
 
   handleStateChange(newValue) {
     onStateChange(item, newValue, index);
@@ -22,7 +27,7 @@ class TodoItem extends StatelessWidget {
       ),
       color: ThemeColors.darkBlue,
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 5, horizontal: 5),
+        padding: const EdgeInsets.only(top: 5, bottom: 5, left: 5, right: 15),
         child: Row(
           // mainAxisSize: MainAxisSize.min,
           children: <Widget>[
@@ -30,12 +35,19 @@ class TodoItem extends StatelessWidget {
               value: item.isDone,
               onChanged: handleStateChange,
             ),
-            Container(
-              margin: EdgeInsets.only(left: 10),
-              child: Text(item.description,
-                  maxLines: 1,
-                  style: TextStyle(fontSize: 16, color: ThemeColors.white)),
-            )
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.only(left: 10),
+                child: Text(item.description,
+                    maxLines: 1,
+                    style: TextStyle(fontSize: 16, color: ThemeColors.white)),
+              ),
+            ),
+            GestureDetector(
+                onTap: () {
+                  onItemDelete(index);
+                },
+                child: Icon(Icons.delete, color: Colors.red))
           ],
         ),
       ),
